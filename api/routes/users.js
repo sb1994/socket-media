@@ -98,4 +98,15 @@ router.post(
     }
   })
 );
+
+router.get("/", async (req, res) => {
+  const users = await User.find();
+  res.json({ users });
+});
+router.get("/profile/:id", async (req, res) => {
+  let { id } = req.params;
+  const user = await User.findById(id);
+  res.json({ user });
+  // res.json("hello");
+});
 module.exports = router;
