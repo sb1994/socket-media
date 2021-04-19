@@ -109,4 +109,91 @@ router.get("/profile/:id", async (req, res) => {
   res.json({ user });
   // res.json("hello");
 });
+
+router.post(
+  "/profile/:id/follow",
+  protect,
+  asyncHandler(async (req, res) => {
+    let { id } = req.params;
+    let { user } = req;
+    const currentUser = await User.findById(user._id);
+    const searchedUser = await User.findById(id);
+
+    let { following } = currentUser;
+    let { followers } = searchedUser;
+
+    // checking if the followee's is in the current users following list
+    let followingIds = following.filter(
+      (user) =>
+        //checking if the user exists
+        user.user === id
+    );
+
+    //checking if the current user is in the followee's follower list
+    let followerIds = followers.filter(
+      (follower) =>
+        //checking if the user exists
+        follower.user === user._id
+    );
+
+    console.log(followerIds, followingIds);
+
+    if (followingIds.length > 0 && followerIds.length > 0) {
+      console.log("user is already following this user");
+      throw new Error("user is already following this user");
+    } else {
+      //adding to the currentUser following list
+      let addedFollow = { user: searchedUser._id };
+      currentUser.following.push(addedFollow);
+
+      // adding the currentUser to the followees followers list
+      let addedFollower = {
+        user: user._id,
+      };
+      searchedUser.followers.push(addedFollower);
+
+      //   // saving both updatedUsers
+      let updatedCurrentUser = await currentUser.save();
+      let updatedSearchedUser = await searchedUser.save();
+
+      console.log(updatedCurrentUser, updatedSearchedUser);
+      res.json({
+        searchedUser: updatedSearchedUser,
+        currentUser: updatedCurrentUser,
+      });
+      // res/
+    }
+  })
+);
+router.post(
+  "/profile/:id/unfollow",
+  protect,
+  asyncHandler(async (req, res) => {
+    let { id } = req.params;
+    let { user } = req;
+    const searchedUser = await User.findById(id);
+    const currentUser = await User.findById(user._id);
+
+    let updatedFollowingList = currentUser.following.filter(
+      (followee) => followee.user.toString() !== id.toString()
+    );
+
+    // // // updating the followees followers list
+    let updatedFollowerList = searchedUser.followers.filter(
+      (follower) => follower.user.toString() !== user._id.toString()
+    );
+
+    currentUser.following = updatedFollowingList;
+    searchedUser.followers = updatedFollowerList;
+
+    let updatedSearchedUser = await searchedUser.save();
+    let updatedCurrentUser = await currentUser.save();
+
+    res.json({
+      currentUser: updatedCurrentUser,
+      searchedUser: updatedSearchedUser,
+    });
+  })
+);
+
 module.exports = router;
