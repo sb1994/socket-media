@@ -7,23 +7,11 @@ const { notFound, errorHandler } = require("./middleware/error");
 const cors = require("cors");
 require("dotenv").config();
 
-// database conntection
-const db = process.env.DB_CONNECT;
-mongoose.connect(
-  db,
-  {
-    useNewUrlParser: true,
-
-    useUnifiedTopology: true,
-    useFindAndModify: false,
-  },
-  (err) => {
-    if (err) throw err;
-    console.log("Mongo Db Connected");
-  }
-);
+// #mongoDB
+require("./utils/db");
 
 const app = express();
+const http = require("http").Server(app);
 app.use(express.json());
 
 app.use(express.json());
@@ -52,4 +40,4 @@ if (process.env.NODE_ENV === "production") {
 }
 
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT);
+http.listen(PORT, () => console.log(`Server listening on PORT ${PORT}`));
